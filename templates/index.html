@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container">
+  <div class="card">
+
+    <div class="card-header">
+      <h1>Welcome</h1>
+      <p class="small">Sign in to your account or create a new one.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form id="auth-form" class="form" method="POST" autocomplete="on">
+
+      <div>
+        <div class="label">Username</div>
+        <input type="text" name="username" placeholder="Enter your username" class="input-field" required autofocus>
+      </div>
+
+      <div>
+        <div class="label">Password</div>
+        <input type="password" name="password" placeholder="Enter your password" class="input-field" required>
+      </div>
+
+      <button id="loginBtn" type="button" class="btn btn_login" onclick="submitAuth('login')">
+        Login
+      </button>
+
+      <button id="registerBtn" type="button" class="btn btn_register" onclick="submitAuth('register')">
+        Register
+      </button>
+
+      <!-- Google login should be a GET redirect, not a form submit -->
+      <a id="googleBtn" class="btn btn_google" href="{{ url_for('login_with_google') }}">
+        Login with Google
+      </a>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+  function submitAuth(actionType) {
+    const form = document.getElementById('auth-form');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const googleBtn = document.getElementById('googleBtn');
+
+    // prevent double submit
+    loginBtn.disabled = true;
+    registerBtn.disabled = true;
+    if (googleBtn) googleBtn.style.pointerEvents = 'none';
+
+    if (actionType === 'login') {
+      form.action = "{{ url_for('login') }}";
+    } else if (actionType === 'register') {
+      form.action = "{{ url_for('register') }}";
+    }
+
+    form.method = "POST";
+    form.submit();
+  }
+</script>
+
+{% endblock %}

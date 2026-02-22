@@ -1,0 +1,578 @@
+/* =========================
+   SHADCN-LIKE DESIGN SYSTEM
+   (Single-file SASS)
+========================= */
+
+/* ---- Design tokens ---- */
+:root {
+  /* Core */
+  --background: 0 0% 100%;
+  --foreground: 172 20% 12%; /* slightly teal-toned dark text */
+
+  /* Card */
+  --card: 0 0% 100%;
+  --card-foreground: 172 20% 12%;
+
+  /* Muted surfaces (soft teal tint instead of blue-gray) */
+  --muted: 172 25% 96%;
+  --muted-foreground: 172 15% 40%;
+
+  /* Lolo Teal Primary */
+  --primary: 172 32% 22%;
+  --primary-hover: 172 32% 18%;
+  --primary-foreground: 210 40% 98%;
+
+  /* Borders & inputs slightly teal-based */
+  --border: 172 20% 88%;
+  --input: 172 20% 88%;
+  --ring: 172 32% 22%;
+
+  /* Destructive stays red */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --radius: 0.75rem;
+}
+
+/* Optional dark mode:
+   Add: <body data-theme="dark"> in base.html
+*/
+[data-theme="dark"] {
+  --background: 172 25% 10%;
+  --foreground: 172 20% 95%;
+
+  --card: 172 25% 12%;
+  --card-foreground: 172 20% 95%;
+
+  --muted: 172 20% 18%;
+  --muted-foreground: 172 15% 65%;
+
+  /* Teal becomes lighter in dark mode */
+  --primary: 172 40% 75%;
+  --primary-hover: 172 40% 68%;
+  --primary-foreground: 172 25% 12%;
+
+  --border: 172 20% 22%;
+  --input: 172 20% 22%;
+  --ring: 172 40% 75%;
+}
+
+
+/* ---- Mixins ---- */
+@mixin transition {
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease,
+    color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+@mixin focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2);
+}
+
+/* ---- Base ---- */
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  font-weight: 600;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover { text-decoration: underline; }
+
+.small {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ---- Layout ---- */
+.container {
+  max-width: 720px;
+  margin: 10vh auto;
+  padding: 0 1rem;
+}
+
+.card {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  margin-bottom: 1.25rem;
+
+  h1 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.95rem;
+  }
+}
+
+/* ---- Forms ---- */
+.form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.35rem;
+}
+
+.input,
+.input-field {
+  width: 100%;
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: calc(var(--radius) - 0.2rem);
+  padding: 0.75rem 0.85rem;
+  font-size: 0.95rem;
+  @include transition;
+
+  &::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  &:focus {
+    border-color: hsl(var(--ring));
+    @include focus-ring;
+  }
+}
+
+/* ---- Button system (works with your existing .btn, .btn_login, .btn_register) ---- */
+.btn {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 0.2rem);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  @include transition;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn_login,
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+
+  &:hover {
+    background: hsl(var(--primary-hover));
+    opacity: 1;
+  }
+
+  &:focus { @include focus-ring; }
+}
+
+
+.btn_register,
+.btn-outline {
+  background: transparent;
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+
+  &:hover { background: hsl(var(--muted)); }
+  &:focus { @include focus-ring; }
+}
+
+/* Destructive */
+.btn-destructive {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+
+  &:hover { opacity: 0.92; }
+  &:focus { @include focus-ring; }
+}
+
+/* ---- Alerts ---- */
+.alert {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted));
+  border-radius: calc(var(--radius) - 0.2rem);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.alert-error {
+  border-color: hsl(var(--destructive) / 0.35);
+  background: hsl(var(--destructive) / 0.08);
+}
+
+/* ---- Dashboard nice spacing ---- */
+.dashboard-actions {
+  margin-top: 1rem;
+}
+
+
+/* =========================
+   DASHBOARD (plain HTML)
+   Styles for: h1, table, form, links, buttons
+========================= */
+
+.container h1 {
+  font-size: 1.6rem;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.25rem 0;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  overflow: hidden; /* keeps rounded corners */
+}
+
+th, td {
+  text-align: left;
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.95rem;
+}
+
+th {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Actions column layout */
+td form {
+  display: inline;
+}
+
+td a,
+td button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: calc(var(--radius) - 0.2rem);
+  font-size: 0.9rem;
+  line-height: 1;
+  @include transition;
+}
+
+/* Edit link (outline style) */
+td a {
+  border: 1px solid hsl(var(--border));
+  text-decoration: none;
+
+  &:hover {
+    background: hsl(var(--muted));
+    text-decoration: none;
+  }
+
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+/* Delete button (destructive style) */
+td button {
+  border: 1px solid transparent;
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  cursor: pointer;
+
+  &:hover { opacity: 0.92; }
+  &:focus { @include focus-ring; }
+}
+
+/* Add-task form (plain form, no extra classes required) */
+.container > form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.container > form input[type="text"] {
+  width: 100%;
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: calc(var(--radius) - 0.2rem);
+  padding: 0.75rem 0.85rem;
+  font-size: 0.95rem;
+  @include transition;
+
+  &:focus {
+    border-color: hsl(var(--ring));
+    @include focus-ring;
+  }
+}
+
+.container > form button[type="submit"] {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 0.2rem);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  @include transition;
+
+  &:hover { opacity: 0.92; }
+  &:focus { @include focus-ring; }
+}
+
+/* Logout link at bottom */
+.container > a {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: hsl(var(--muted-foreground));
+
+  &:hover {
+    color: hsl(var(--foreground));
+  }
+}
+
+.container p a {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 0.2rem);
+  text-decoration: none;
+
+  &:hover { background: hsl(var(--muted)); }
+}
+
+/* =========================
+   DASHBOARD V2 (matches the updated dashboard.html)
+========================= */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h1 { margin: 0; }
+  .muted { margin: 0.25rem 0 0 0; color: hsl(var(--muted-foreground)); }
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1.25rem 0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 0.2rem);
+  text-decoration: none;
+  @include transition;
+
+  &:hover { background: hsl(var(--muted)); text-decoration: none; }
+  &:focus { @include focus-ring; }
+
+  &.active {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-color: transparent;
+
+    &:hover { background: hsl(var(--primary-hover)); }
+  }
+}
+
+.form-row {
+  display: grid;
+  gap: 0.9rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field { display: grid; }
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.btn_ghost {
+  background: transparent;
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+
+  &:hover { background: hsl(var(--muted)); }
+  &:focus { @include focus-ring; }
+}
+
+.btn_primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+
+  &:hover { background: hsl(var(--primary-hover)); }
+  &:focus { @include focus-ring; }
+}
+
+.btn_small {
+  width: auto;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.btn_danger {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+
+  &:hover { opacity: 0.92; }
+  &:focus { @include focus-ring; }
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.table th, .table td {
+  text-align: left;
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.95rem;
+  vertical-align: top;
+}
+
+.table th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.table tr:last-child td { border-bottom: none; }
+
+.col-status { width: 70px; }
+.col-actions { width: 160px; }
+
+.row-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  form { margin: 0; }
+}
+
+.task-title { font-weight: 600; }
+.task-meta { margin-top: 0.2rem; }
+
+.row-done .task-title {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.empty {
+  padding: 1rem 0;
+  color: hsl(var(--muted-foreground));
+}
+
+
+/* =========================
+   HEADER / LOGO
+========================= */
+
+.app-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+.header-left {
+  justify-self: start;
+}
+
+.header-center {
+  justify-self: center;
+}
+
+.header-right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-right.btn {
+  width: auto;
+}
+
+.logo img {
+  height: 60px;   /* standard logo size */
+  width: auto;
+  object-fit: contain;
+}
+
+.app-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+}
+
+.header-user {
+  font-size: 0.9rem;
+  color: hsl(var(--muted-foreground));
+}
+
