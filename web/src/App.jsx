@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import { Card, CardContent } from "./components/ui/card";
 import { api } from "./lib/api";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+
+function CenterState({ children }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-lg">{children}</div>
+    </div>
+  );
+}
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -59,25 +69,37 @@ export default function App() {
 
   if (booting) {
     return (
-      <div className="page-shell">
-        <div className="panel">
-          <p className="muted">Loading session...</p>
-        </div>
-      </div>
+      <CenterState>
+        <Card className="shadow-soft">
+          <CardContent className="p-6">
+            <p className="text-sm text-muted-foreground">Loading session...</p>
+          </CardContent>
+        </Card>
+      </CenterState>
     );
   }
 
   if (bootError) {
     return (
-      <div className="page-shell">
-        <div className="panel">
-          <h1>API Error</h1>
-          <p className="error">{bootError}</p>
-          <p className="muted">
-            Make sure Flask is running at <code>http://localhost:5000</code>.
-          </p>
-        </div>
-      </div>
+      <CenterState>
+        <Card className="shadow-soft">
+          <CardContent className="space-y-4 p-6">
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">API Error</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The frontend could not initialize your session.
+              </p>
+            </div>
+            <Alert variant="destructive">
+              <AlertTitle>Request failed</AlertTitle>
+              <AlertDescription>{bootError}</AlertDescription>
+            </Alert>
+            <p className="text-sm text-muted-foreground">
+              Make sure Flask is running at <code>http://localhost:5000</code>.
+            </p>
+          </CardContent>
+        </Card>
+      </CenterState>
     );
   }
 

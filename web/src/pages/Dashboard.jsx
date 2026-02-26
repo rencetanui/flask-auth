@@ -1,5 +1,18 @@
 import { useEffect, useState } from "react";
 
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 import { api } from "../lib/api";
 
 const FILTER_OPTIONS = [
@@ -128,120 +141,182 @@ export default function Dashboard({ user, onLogout }) {
   }
 
   return (
-    <div className="page-shell">
-      <div className="panel wide">
-        <div className="row between">
-          <div>
-            <h1>Dashboard</h1>
-            <p className="muted">Signed in as {user.username}</p>
+    <div className="min-h-screen px-4 py-8">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <Card className="shadow-soft">
+          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Signed in as {user.username}</p>
+            </div>
+            <Button type="button" variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
+          </CardContent>
+        </Card>
+
+        {error ? (
+          <Alert variant="destructive">
+            <AlertTitle>Action failed</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+          <div className="space-y-6">
+            <Card className="shadow-soft">
+              <CardHeader>
+                <CardTitle className="text-lg">Add task</CardTitle>
+                <CardDescription>Create a new task item for your list.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddTask} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-task-title">Task title</Label>
+                    <Input
+                      id="new-task-title"
+                      placeholder="Task title"
+                      value={newTask.content}
+                      onChange={(event) =>
+                        setNewTask((prev) => ({ ...prev, content: event.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-task-description">Description</Label>
+                    <Textarea
+                      id="new-task-description"
+                      placeholder="Description (optional)"
+                      value={newTask.description}
+                      onChange={(event) =>
+                        setNewTask((prev) => ({ ...prev, description: event.target.value }))
+                      }
+                      rows={3}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={saving}>
+                    {saving ? "Saving..." : "Add Task"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-soft">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Filter</CardTitle>
+                <CardDescription>Choose which tasks to show.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {FILTER_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    size="sm"
+                    variant={filter === option.value ? "default" : "outline"}
+                    onClick={() => setFilter(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </CardContent>
+            </Card>
           </div>
-          <button type="button" className="secondary" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
 
-        {error ? <p className="error">{error}</p> : null}
-
-        <form onSubmit={handleAddTask} className="stack card">
-          <h2>Add task</h2>
-          <input
-            placeholder="Task title"
-            value={newTask.content}
-            onChange={(event) =>
-              setNewTask((prev) => ({ ...prev, content: event.target.value }))
-            }
-            required
-          />
-          <textarea
-            placeholder="Description (optional)"
-            value={newTask.description}
-            onChange={(event) =>
-              setNewTask((prev) => ({ ...prev, description: event.target.value }))
-            }
-            rows={3}
-          />
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Add Task"}
-          </button>
-        </form>
-
-        <div className="row gap">
-          {FILTER_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className={filter === option.value ? "chip active" : "chip"}
-              onClick={() => setFilter(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        {loading ? (
-          <p className="muted">Loading tasks...</p>
-        ) : items.length === 0 ? (
-          <p className="muted">No tasks for this filter.</p>
-        ) : (
-          <ul className="task-list">
-            {items.map((item) => (
-              <li key={item.id} className="task-item">
-                <div className="row between start">
-                  <label className="row gap start">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(item.completed)}
-                      onChange={() => handleToggle(item)}
-                    />
-                    <div>
-                      <div className={item.completed ? "task-title done" : "task-title"}>
-                        {item.content}
-                      </div>
-                      {item.description ? (
-                        <div className="muted task-desc">{item.description}</div>
-                      ) : null}
-                    </div>
-                  </label>
-
-                  <div className="row gap">
-                    <button type="button" className="secondary" onClick={() => startEdit(item)}>
-                      Edit
-                    </button>
-                    <button type="button" className="danger" onClick={() => handleDelete(item.id)}>
-                      Delete
-                    </button>
-                  </div>
+          <Card className="shadow-soft">
+            <CardHeader>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="text-lg">Tasks</CardTitle>
+                  <CardDescription>
+                    {loading ? "Loading tasks..." : `${items.length} task${items.length === 1 ? "" : "s"}`}
+                  </CardDescription>
                 </div>
+                <Badge variant="secondary" className="w-fit capitalize">
+                  {filter}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Loading tasks...</p>
+              ) : items.length === 0 ? (
+                <div className="rounded-md border border-dashed bg-muted/40 p-6 text-sm text-muted-foreground">
+                  No tasks for this filter.
+                </div>
+              ) : (
+                items.map((item) => (
+                  <div key={item.id} className="rounded-lg border bg-background p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <label className="flex cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.completed)}
+                          onChange={() => handleToggle(item)}
+                          className="mt-1 h-4 w-4 rounded border-input accent-[hsl(var(--primary))]"
+                        />
+                        <div className="space-y-1">
+                          <div
+                            className={
+                              item.completed
+                                ? "font-medium text-muted-foreground line-through"
+                                : "font-medium text-foreground"
+                            }
+                          >
+                            {item.content}
+                          </div>
+                          {item.description ? (
+                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                          ) : null}
+                        </div>
+                      </label>
 
-                {editingId === item.id ? (
-                  <div className="card stack compact">
-                    <input
-                      value={editForm.content}
-                      onChange={(event) =>
-                        setEditForm((prev) => ({ ...prev, content: event.target.value }))
-                      }
-                    />
-                    <textarea
-                      rows={2}
-                      value={editForm.description}
-                      onChange={(event) =>
-                        setEditForm((prev) => ({ ...prev, description: event.target.value }))
-                      }
-                    />
-                    <div className="row gap">
-                      <button type="button" onClick={() => saveEdit(item.id)}>
-                        Save
-                      </button>
-                      <button type="button" className="secondary" onClick={cancelEdit}>
-                        Cancel
-                      </button>
+                      <div className="flex gap-2 sm:shrink-0">
+                        <Button type="button" size="sm" variant="outline" onClick={() => startEdit(item)}>
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
+
+                    {editingId === item.id ? (
+                      <div className="mt-4 space-y-3 rounded-md border bg-muted/30 p-3">
+                        <Input
+                          value={editForm.content}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, content: event.target.value }))
+                          }
+                        />
+                        <Textarea
+                          rows={2}
+                          value={editForm.description}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, description: event.target.value }))
+                          }
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" size="sm" onClick={() => saveEdit(item.id)}>
+                            Save
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={cancelEdit}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

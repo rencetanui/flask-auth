@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { api } from "../lib/api";
 
 export default function Register({ onAuthenticated }) {
@@ -35,61 +47,80 @@ export default function Register({ onAuthenticated }) {
   }
 
   return (
-    <div className="page-shell">
-      <div className="panel">
-        <div className="auth-brand">
-          <img src="/logo.png" alt="Task Manager logo" className="auth-logo" />
-        </div>
-        <h1>Register</h1>
-        <p className="muted">Create an account to get started.</p>
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <Card className="w-full max-w-md border-white/50 shadow-soft backdrop-blur-sm">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <img src="/logo.png" alt="Task Manager logo" className="h-14 w-auto object-contain" />
+          </div>
+          <div className="space-y-1 text-center">
+            <CardTitle className="text-2xl">Register</CardTitle>
+            <CardDescription>Create an account to get started.</CardDescription>
+          </div>
+        </CardHeader>
 
-        {error ? <p className="error">{error}</p> : null}
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Registration failed</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
 
-        <form onSubmit={handleSubmit} className="stack">
-          <label className="stack">
-            <span>Username</span>
-            <input
-              name="username"
-              value={form.username}
-              onChange={updateField}
-              autoComplete="username"
-              required
-            />
-          </label>
+            <div className="space-y-2">
+              <Label htmlFor="register-username">Username</Label>
+              <Input
+                id="register-username"
+                name="username"
+                value={form.username}
+                onChange={updateField}
+                autoComplete="username"
+                required
+              />
+            </div>
 
-          <label className="stack">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={updateField}
-              autoComplete="new-password"
-              required
-            />
-          </label>
+            <div className="space-y-2">
+              <Label htmlFor="register-password">Password</Label>
+              <Input
+                id="register-password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={updateField}
+                autoComplete="new-password"
+                required
+              />
+            </div>
 
-          <label className="stack">
-            <span>Confirm Password</span>
-            <input
-              name="confirm_password"
-              type="password"
-              value={form.confirm_password}
-              onChange={updateField}
-              autoComplete="new-password"
-              required
-            />
-          </label>
+            <div className="space-y-2">
+              <Label htmlFor="register-confirm-password">Confirm Password</Label>
+              <Input
+                id="register-confirm-password"
+                name="confirm_password"
+                type="password"
+                value={form.confirm_password}
+                onChange={updateField}
+                autoComplete="new-password"
+                required
+              />
+            </div>
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Creating account..." : "Register"}
-          </button>
-        </form>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Creating account..." : "Register"}
+            </Button>
+          </form>
+        </CardContent>
 
-        <p className="muted">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
+        <CardFooter className="justify-center text-sm text-muted-foreground">
+          <p>
+            Already have an account?{" "}
+            <Link to="/login" className="font-medium text-foreground hover:underline">
+              Login
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

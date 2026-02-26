@@ -1,5 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Button, buttonVariants } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { cn } from "../lib/utils";
 import { API_BASE_URL, api } from "../lib/api";
 
 const googleEnabledByEnv = import.meta.env.VITE_GOOGLE_OAUTH_ENABLED === "true";
@@ -59,55 +73,76 @@ export default function Login({ onAuthenticated }) {
   }
 
   return (
-    <div className="page-shell">
-      <div className="panel">
-        <div className="auth-brand">
-          <img src="/logo.png" alt="Task Manager logo" className="auth-logo" />
-        </div>
-        <h1>Welcome.</h1>
-        <p className="muted">Sign in to your account.</p>
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <Card className="w-full max-w-md border-white/50 shadow-soft backdrop-blur-sm">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <img src="/logo.png" alt="Task Manager logo" className="h-14 w-auto object-contain" />
+          </div>
+          <div className="space-y-1 text-center">
+            <CardTitle className="text-2xl">Welcome</CardTitle>
+            <CardDescription>Sign in to your account.</CardDescription>
+          </div>
+        </CardHeader>
 
-        {error ? <p className="error">{error}</p> : null}
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Login failed</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
 
-        <form onSubmit={handleSubmit} className="stack">
-          <label className="stack">
-            <span>Username</span>
-            <input
-              name="username"
-              value={form.username}
-              onChange={updateField}
-              autoComplete="username"
-              required
-            />
-          </label>
+            <div className="space-y-2">
+              <Label htmlFor="login-username">Username</Label>
+              <Input
+                id="login-username"
+                name="username"
+                value={form.username}
+                onChange={updateField}
+                autoComplete="username"
+                required
+              />
+            </div>
 
-          <label className="stack">
-            <span>Password</span>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={updateField}
-              autoComplete="current-password"
-              required
-            />
-          </label>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">Password</Label>
+              <Input
+                id="login-password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={updateField}
+                autoComplete="current-password"
+                required
+              />
+            </div>
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Signing in..." : "Login"}
-          </button>
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? "Signing in..." : "Login"}
+            </Button>
 
-          {googleEnabled ? (
-            <a href={`${API_BASE_URL}/login/google`} className="button">
-              Sign in with Google
-            </a>
-          ) : null}
-        </form>
+            {googleEnabled ? (
+              <a
+                href={`${API_BASE_URL}/login/google`}
+                className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+              >
+                Sign in with Google
+              </a>
+            ) : null}
+          </form>
+        </CardContent>
 
-        <p className="muted">
-          Don&apos;t have an account? <Link to="/register">Register</Link>
-        </p>
-      </div>
+        <CardFooter className="justify-center text-sm text-muted-foreground">
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link to="/register" className="font-medium text-foreground hover:underline">
+              Register
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
