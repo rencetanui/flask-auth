@@ -75,9 +75,9 @@ def list_tasks():
 
     # show filter
     if show == "active":
-        query = query.filter_by(completed=False)
+        query = query.filter_by(is_done=False)
     elif show == "done":
-        query = query.filter_by(completed=True)
+        query = query.filter_by(is_done=True)
 
     # view filter (for sidebar)
     if view == "inbox":
@@ -125,7 +125,13 @@ def create_task():
     except (ValueError, PermissionError):
         return _error("Invalid list_id", 403)
     
-    task = Task(content=content, description=description, user_id=user_id, due_at=due_at, list_id=list_id)
+    task = Task(
+        title=content,
+        notes=description,
+        user_id=user_id,
+        due_at=due_at,
+        list_id=list_id,
+    )
     db.session.add(task)
     db.session.commit()
     return jsonify({"item": task.to_dict()}), 201

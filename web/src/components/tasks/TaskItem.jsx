@@ -50,8 +50,8 @@ export default function TaskItem({ task, onToggle, onDelete }) {
           ) : null}
 
           <div className="mt-2 text-[11px] text-muted-foreground">
-            Created: {task.created_at ? new Date(task.created_at).toLocaleString() : "—"}
-            {task.due_at ? ` • Due: ${new Date(task.due_at).toLocaleString()}` : ""}
+            Created: {task.created_at ? new Date(task.created_at).toLocaleString() : "-"}
+            {task.due_at ? ` | Due: ${new Date(task.due_at).toLocaleString()}` : ""}
           </div>
         </div>
 

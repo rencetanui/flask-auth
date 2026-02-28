@@ -65,7 +65,7 @@ export default function TasksPage({ title, show = "active", view = "", defaultLi
 
       <Separator />
 
-      {loading ? <div className="text-sm text-muted-foreground">Loading…</div> : null}
+      {loading ? <div className="text-sm text-muted-foreground">Loading...</div> : null}
       {error ? <div className="text-sm text-red-600">{error}</div> : null}
 
       {!loading && !error && items.length === 0 ? (

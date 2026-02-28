@@ -11,7 +11,6 @@ export default function ProfilePage() {
     (async () => {
       try {
         setError("");
-        // If you have /api/me, use it. Otherwise you can remove this page or read username from session elsewhere.
         const res = await api.get("/api/auth/me");
         setUser(res.user || null);
       } catch (e) {
@@ -22,10 +21,9 @@ export default function ProfilePage() {
 
   const logout = async () => {
     try {
-      // if your backend logout is POST /api/logout:
       await api.post("/api/auth/logout", {});
     } catch (err) {
-      // ignore; still redirect
+      // Ignore logout failures and still redirect.
     }
     window.location.href = "/login";
   };
@@ -41,7 +39,7 @@ export default function ProfilePage() {
         {error ? <div className="text-sm text-red-600">{error}</div> : null}
 
         {!error && !user ? (
-          <div className="text-sm text-muted-foreground">Loading…</div>
+          <div className="text-sm text-muted-foreground">Loading...</div>
         ) : null}
 
         {user ? (

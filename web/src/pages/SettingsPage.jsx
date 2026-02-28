@@ -10,7 +10,7 @@ export default function SettingsPage() {
     setMsg("");
     try {
       const res = await api.get("/api/health");
-      setMsg(res.ok ? "API is healthy ✅" : "API responded, but ok=false");
+      setMsg(res.ok ? "API is healthy." : "API responded, but ok=false");
     } catch (e) {
       setMsg(e?.message || "Failed to reach API");
     }

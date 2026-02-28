@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { api } from "../../lib/api";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { useSidebarData } from "./useSidebarData";
@@ -81,8 +82,11 @@ export default function Sidebar() {
               "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
             onClick={async () => {
-              // assuming you have POST /api/logout
-              // await api.post("/api/logout");
+              try {
+                await api.post("/api/auth/logout");
+              } catch (error) {
+                // Ignore logout failures and still return to login.
+              }
               window.location.href = "/login";
             }}
           >

@@ -24,8 +24,8 @@ export function useSidebarData() {
         api.get("/api/lists"),
       ]);
 
-      setCounts(countsRes.data);
-      setLists(listsRes.data.items ?? []);
+      setCounts(countsRes ?? null);
+      setLists(listsRes?.items ?? []);
     } finally {
       setLoading(false);
     }
