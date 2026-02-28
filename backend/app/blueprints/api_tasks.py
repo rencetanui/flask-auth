@@ -3,13 +3,38 @@ from __future__ import annotations
 from flask import Blueprint, jsonify, request
 
 from ..extensions import db
-from ..models import MyTask
+from ..models import Task
 from ..services.auth import api_login_required, current_user
+from ..models import TaskList, Task
+from datetime import datetime, time
 
 bp = Blueprint("api_tasks", __name__, url_prefix="/api/tasks")
 
 VALID_SHOW_VALUES = {"active", "done", "all"}
 
+def _parse_iso_datetime(value: str) -> datetime | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("must be an ISO datetime string or null")
+    value = value.strip()
+    if not value:
+        return None
+    # Accept both "...Z" and "+00:00"
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    return datetime.fromisoformat(value)
+
+def _require_owned_list_id(list_id: int | None, user_id: int) -> int | None:
+    if list_id is None:
+        return None
+    if not isinstance(list_id, int):
+        raise ValueError("list_id must be an integer or null")
+
+    lst = db.session.get(TaskList, list_id)
+    if lst is None or lst.user_id != user_id:
+        raise PermissionError("Invalid list_id")
+    return list_id
 
 def _error(message: str, status: int):
     return jsonify({"error": message}), status
@@ -27,8 +52,8 @@ def _require_user_id() -> int:
     return user.id
 
 
-def _get_owned_task(task_id: int, user_id: int) -> MyTask | None:
-    task = db.session.get(MyTask, task_id)
+def _get_owned_task(task_id: int, user_id: int) -> Task | None:
+    task = db.session.get(Task, task_id)
     if task is None:
         return None
     if task.user_id != user_id:
@@ -41,19 +66,42 @@ def _get_owned_task(task_id: int, user_id: int) -> MyTask | None:
 def list_tasks():
     user_id = _require_user_id()
     show = request.args.get("show", "active").lower()
+    view = (request.args.get("view") or "").lower()
 
     if show not in VALID_SHOW_VALUES:
         return _error("Invalid show filter. Use active, done, or all", 400)
 
-    query = MyTask.query.filter_by(user_id=user_id)
+    query = Task.query.filter_by(user_id=user_id)
+
+    # show filter
     if show == "active":
         query = query.filter_by(completed=False)
     elif show == "done":
         query = query.filter_by(completed=True)
 
-    items = query.order_by(MyTask.created_at.desc()).all()
-    return jsonify({"items": [item.to_dict() for item in items]})
+    # view filter (for sidebar)
+    if view == "inbox":
+        query = query.filter(Task.list_id.is_(None))
+    elif view == "today":
+        today = datetime.utcnow().date()
+        start = datetime.combine(today, time.min)
+        end = datetime.combine(today, time.max)
+        query = query.filter(Task.due_at.isnot(None), Task.due_at >= start, Task.due_at <= end)
+    elif view == "upcoming":
+        today = datetime.utcnow().date()
+        end = datetime.combine(today, time.max)
+        query = query.filter(Task.due_at.isnot(None), Task.due_at > end)
+    elif view.startswith("list:"):
+        try:
+            list_id = int(view.split(":", 1)[1])
+        except ValueError:
+            return _error("Invalid list view. Use view=list:<id>", 400)
+        query = query.filter(Task.list_id == list_id)
+    elif view:
+        return _error("Invalid view. Use inbox, today, upcoming, or list:<id>", 400)
 
+    items = query.order_by(Task.created_at.desc()).all()
+    return jsonify({"items": [item.to_dict() for item in items]})
 
 @bp.post("")
 @api_login_required
@@ -68,7 +116,16 @@ def create_task():
     if not content:
         return _error("Task content is required", 400)
 
-    task = MyTask(content=content, description=description, user_id=user_id)
+    try:
+        due_at = _parse_iso_datetime(data.get("due_at"))
+    except ValueError:
+        return _error("Invalid due_at format. Use ISO datetime string or null.", 400)
+    try:
+        list_id = _require_owned_list_id(data.get("list_id"), user_id)
+    except (ValueError, PermissionError):
+        return _error("Invalid list_id", 403)
+    
+    task = Task(content=content, description=description, user_id=user_id, due_at=due_at, list_id=list_id)
     db.session.add(task)
     db.session.commit()
     return jsonify({"item": task.to_dict()}), 201
@@ -88,17 +145,31 @@ def update_task(task_id: int):
         content = (data.get("content") or "").strip()
         if not content:
             return _error("Task content is required", 400)
-        task.content = content
+        task.title = content
 
     if "description" in data:
         raw_description = data.get("description")
         if raw_description is None:
-            task.description = None
+            task.notes = None
         elif isinstance(raw_description, str):
-            task.description = raw_description.strip()
+            task.notes = raw_description.strip()
         else:
             return _error("Description must be a string or null", 400)
 
+    if "due_at" in data:
+        try:
+            task.due_at = _parse_iso_datetime(data.get("due_at"))
+        except ValueError as e:
+            return _error(f"due_at {e}", 400)
+
+    if "list_id" in data:
+        try:
+            task.list_id = _require_owned_list_id(data.get("list_id"), user_id)
+        except ValueError as e:
+            return _error(str(e), 400)
+        except PermissionError:
+            return _error("Invalid list_id", 403)
+    
     db.session.commit()
     return jsonify({"item": task.to_dict()})
 
@@ -116,9 +187,9 @@ def toggle_task(task_id: int):
         completed = data["completed"]
         if not isinstance(completed, bool):
             return _error("completed must be true or false", 400)
-        task.completed = completed
+        task.is_done = completed
     else:
-        task.completed = not task.completed
+        task.is_done = not task.is_done
 
     db.session.commit()
     return jsonify({"item": task.to_dict()})

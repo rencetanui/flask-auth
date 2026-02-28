@@ -45,10 +45,14 @@ def _register_blueprints(app: Flask) -> None:
     from .blueprints.oauth_google import bp as oauth_google_bp
     from .blueprints.api_auth import bp as api_auth_bp
     from .blueprints.api_tasks import bp as api_tasks_bp
-
+    from .blueprints.sidebar import bp as sidebar_bp
+    from .blueprints.lists import bp as lists_bp
+    
     app.register_blueprint(oauth_google_bp)
     app.register_blueprint(api_auth_bp)
     app.register_blueprint(api_tasks_bp)
+    app.register_blueprint(sidebar_bp)
+    app.register_blueprint(lists_bp)
 
 
 def _register_oauth_client(app: Flask) -> None:

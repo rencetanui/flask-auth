@@ -5,8 +5,8 @@ import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
 import { Card, CardContent } from "./components/ui/card";
 import { api } from "./lib/api";
 import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/LoginPage";
+import Register from "./pages/RegisterPage";
 
 function CenterState({ children }) {
   return (
