@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from flask import Blueprint, jsonify, request
+from datetime import datetime, time, timezone
+
+from flask import Blueprint, request
 
 from ..extensions import db
-from ..models import Task
 from ..services.auth import api_login_required, current_user
 from ..models import TaskList, Task
-from datetime import datetime, time
+from ..utils import err, ok
 
 bp = Blueprint("api_tasks", __name__, url_prefix="/api/tasks")
 
@@ -35,10 +36,6 @@ def _require_owned_list_id(list_id: int | None, user_id: int) -> int | None:
     if lst is None or lst.user_id != user_id:
         raise PermissionError("Invalid list_id")
     return list_id
-
-def _error(message: str, status: int):
-    return jsonify({"error": message}), status
-
 
 def _json_data() -> dict:
     data = request.get_json(silent=True)
@@ -69,7 +66,7 @@ def list_tasks():
     view = (request.args.get("view") or "").lower()
 
     if show not in VALID_SHOW_VALUES:
-        return _error("Invalid show filter. Use active, done, or all", 400)
+        return err("Invalid show filter. Use active, done, or all", 400)
 
     query = Task.query.filter_by(user_id=user_id)
 
@@ -83,25 +80,25 @@ def list_tasks():
     if view == "inbox":
         query = query.filter(Task.list_id.is_(None))
     elif view == "today":
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         start = datetime.combine(today, time.min)
         end = datetime.combine(today, time.max)
         query = query.filter(Task.due_at.isnot(None), Task.due_at >= start, Task.due_at <= end)
     elif view == "upcoming":
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         end = datetime.combine(today, time.max)
         query = query.filter(Task.due_at.isnot(None), Task.due_at > end)
     elif view.startswith("list:"):
         try:
             list_id = int(view.split(":", 1)[1])
         except ValueError:
-            return _error("Invalid list view. Use view=list:<id>", 400)
+            return err("Invalid list view. Use view=list:<id>", 400)
         query = query.filter(Task.list_id == list_id)
     elif view:
-        return _error("Invalid view. Use inbox, today, upcoming, or list:<id>", 400)
+        return err("Invalid view. Use inbox, today, upcoming, or list:<id>", 400)
 
     items = query.order_by(Task.created_at.desc()).all()
-    return jsonify({"items": [item.to_dict() for item in items]})
+    return ok({"items": [item.to_dict() for item in items]})
 
 @bp.post("")
 @api_login_required
@@ -114,16 +111,16 @@ def create_task():
     description = raw_description.strip() if isinstance(raw_description, str) else None
 
     if not content:
-        return _error("Task content is required", 400)
+        return err("Task content is required", 400)
 
     try:
         due_at = _parse_iso_datetime(data.get("due_at"))
     except ValueError:
-        return _error("Invalid due_at format. Use ISO datetime string or null.", 400)
+        return err("Invalid due_at format. Use ISO datetime string or null.", 400)
     try:
         list_id = _require_owned_list_id(data.get("list_id"), user_id)
     except (ValueError, PermissionError):
-        return _error("Invalid list_id", 403)
+        return err("Invalid list_id", 403)
     
     task = Task(
         title=content,
@@ -134,7 +131,7 @@ def create_task():
     )
     db.session.add(task)
     db.session.commit()
-    return jsonify({"item": task.to_dict()}), 201
+    return ok({"item": task.to_dict()}, 201)
 
 
 @bp.patch("/<int:task_id>")
@@ -143,14 +140,14 @@ def update_task(task_id: int):
     user_id = _require_user_id()
     task = _get_owned_task(task_id, user_id)
     if task is None:
-        return _error("Task not found", 404)
+        return err("Task not found", 404)
 
     data = _json_data()
 
     if "content" in data:
         content = (data.get("content") or "").strip()
         if not content:
-            return _error("Task content is required", 400)
+            return err("Task content is required", 400)
         task.title = content
 
     if "description" in data:
@@ -160,24 +157,24 @@ def update_task(task_id: int):
         elif isinstance(raw_description, str):
             task.notes = raw_description.strip()
         else:
-            return _error("Description must be a string or null", 400)
+            return err("Description must be a string or null", 400)
 
     if "due_at" in data:
         try:
             task.due_at = _parse_iso_datetime(data.get("due_at"))
         except ValueError as e:
-            return _error(f"due_at {e}", 400)
+            return err(f"due_at {e}", 400)
 
     if "list_id" in data:
         try:
             task.list_id = _require_owned_list_id(data.get("list_id"), user_id)
         except ValueError as e:
-            return _error(str(e), 400)
+            return err(str(e), 400)
         except PermissionError:
-            return _error("Invalid list_id", 403)
+            return err("Invalid list_id", 403)
     
     db.session.commit()
-    return jsonify({"item": task.to_dict()})
+    return ok({"item": task.to_dict()})
 
 
 @bp.patch("/<int:task_id>/toggle")
@@ -186,19 +183,19 @@ def toggle_task(task_id: int):
     user_id = _require_user_id()
     task = _get_owned_task(task_id, user_id)
     if task is None:
-        return _error("Task not found", 404)
+        return err("Task not found", 404)
 
     data = _json_data()
     if "completed" in data:
         completed = data["completed"]
         if not isinstance(completed, bool):
-            return _error("completed must be true or false", 400)
+            return err("completed must be true or false", 400)
         task.is_done = completed
     else:
         task.is_done = not task.is_done
 
     db.session.commit()
-    return jsonify({"item": task.to_dict()})
+    return ok({"item": task.to_dict()})
 
 
 @bp.delete("/<int:task_id>")
@@ -207,8 +204,8 @@ def delete_task(task_id: int):
     user_id = _require_user_id()
     task = _get_owned_task(task_id, user_id)
     if task is None:
-        return _error("Task not found", 404)
+        return err("Task not found", 404)
 
     db.session.delete(task)
     db.session.commit()
-    return jsonify({"ok": True})
+    return ok({"ok": True})

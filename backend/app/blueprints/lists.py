@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 from ..services.auth import api_login_required, current_user
-from ..models.task_list import TaskList
+from ..utils import ok
+from .sidebar import build_lists_payload
 
 bp = Blueprint("lists", __name__, url_prefix="/api")
 
@@ -8,10 +9,4 @@ bp = Blueprint("lists", __name__, url_prefix="/api")
 @api_login_required
 def list_lists():
     u = current_user()
-    lists = (
-        TaskList.query
-        .filter(TaskList.user_id == u.id)
-        .order_by(TaskList.name.asc())
-        .all()
-    )
-    return jsonify({"items": [{"id": l.id, "name": l.name} for l in lists]})
+    return ok({"items": build_lists_payload(u.id)})

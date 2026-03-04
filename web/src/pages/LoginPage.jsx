@@ -1,78 +1,87 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { api } from "../lib/api";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import React, { useState } from "react";
+import { api } from "@/lib/api";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const nav = useNavigate();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = async (e) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAuth();
+
+  const to = location.state?.from?.pathname || "/inbox"; // redirect target after login
+
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     try {
-      await api.post("/api/auth/login", {
+      const res = await api.post("/api/auth/login", {
         username: form.username.trim(),
         password: form.password,
       });
-      nav("/today");
+      // Option A: backend returned user immediately
+      if (res?.user) {
+        setUser(res.user);
+      } else {
+        // Option B: fetch /me to be safe
+        const me = await api.get("/api/auth/me");
+        setUser(me.user);
+      }
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md items-center p-6">
-      <Card className="w-full p-6 space-y-4">
-        <div>
-          <div className="text-xl font-semibold">Login</div>
-          <div className="text-sm text-muted-foreground">
-            Sign in to your account
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="max-w-md w-full bg-white p-8 rounded shadow">
+        <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
 
-        <form className="space-y-3" onSubmit={submit}>
-          <div className="space-y-1">
-            <Label>Username</Label>
-            <Input
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium">Username</label>
+            <input
               value={form.username}
-              onChange={(e) => setForm((s) => ({ ...s, username: e.target.value }))}
-              autoComplete="username"
+              onChange={(e) => setForm(s => ({ ...s, username: e.target.value }))}
+              required
+              className="mt-1 w-full px-3 py-2 border rounded"
             />
           </div>
 
-          <div className="space-y-1">
-            <Label>Password</Label>
-            <Input
+          <div>
+            <label className="block text-sm font-medium">Password</label>
+            <input
               type="password"
               value={form.password}
-              onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-              autoComplete="current-password"
+              onChange={(e) => setForm(s => ({ ...s, password: e.target.value }))}
+              required
+              className="mt-1 w-full px-3 py-2 border rounded"
             />
           </div>
 
-          {error ? <div className="text-sm text-red-600">{error}</div> : null}
+          {error && <div className="text-sm text-red-600">{error}</div>}
 
-          <Button className="w-full" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign in"}
-          </Button>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-70"
+            disabled={submitting}
+          >
+            {submitting ? "Signing in…" : "Sign in"}
+          </button>
         </form>
 
-        <div className="text-sm text-muted-foreground">
-          No account?{" "}
-          <Link className="text-foreground underline" to="/register">
-            Create one
-          </Link>
+        <div className="mt-4 text-sm">
+          Don't have an account? <Link to="/register" className="text-blue-600 underline">Create one</Link>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

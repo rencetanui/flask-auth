@@ -30,11 +30,9 @@ export default function Sidebar() {
       <div className="flex h-full flex-col gap-4">
         {/* Top */}
         <div className="px-1">
-          <div className="text-lg font-semibold">Task App</div>
+          <div className="text-lg font-semibold">Task Flow</div>
           <div className="text-xs text-muted-foreground">Personal</div>
         </div>
-
-        <Button className="w-full">+ New Task</Button>
 
         {/* Navigation */}
         <nav className="space-y-1">

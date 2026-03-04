@@ -1,30 +1,29 @@
-from datetime import datetime, time
-from flask import Blueprint, jsonify
+from datetime import datetime, time, timezone
+
+from flask import Blueprint
 from sqlalchemy import func
 
 from ..services.auth import api_login_required, current_user
 from ..models import Task, TaskList
 from ..extensions import db
+from ..utils import ok
 
 bp = Blueprint("sidebar", __name__, url_prefix="/api/sidebar")
 
-@bp.get("/counts")
-@api_login_required
-def counts():
-    u = current_user()
 
-    today = datetime.utcnow().date()
+def build_sidebar_counts(user_id: int) -> dict:
+    today = datetime.now(timezone.utc).date()
     start = datetime.combine(today, time.min)
     end = datetime.combine(today, time.max)
 
     inbox = Task.query.filter(
-        Task.user_id == u.id,
+        Task.user_id == user_id,
         Task.is_done.is_(False),
         Task.list_id.is_(None),
     ).count()
 
     today_count = Task.query.filter(
-        Task.user_id == u.id,
+        Task.user_id == user_id,
         Task.is_done.is_(False),
         Task.due_at.isnot(None),
         Task.due_at >= start,
@@ -32,22 +31,21 @@ def counts():
     ).count()
 
     upcoming = Task.query.filter(
-        Task.user_id == u.id,
+        Task.user_id == user_id,
         Task.is_done.is_(False),
         Task.due_at.isnot(None),
         Task.due_at > end,
     ).count()
 
     completed = Task.query.filter(
-        Task.user_id == u.id,
+        Task.user_id == user_id,
         Task.is_done.is_(True),
     ).count()
 
-    # Optional: counts per list (for badges next to School/Home/etc.)
     per_list_rows = (
         db.session.query(Task.list_id, func.count(Task.id))
         .filter(
-            Task.user_id == u.id,
+            Task.user_id == user_id,
             Task.is_done.is_(False),
             Task.list_id.isnot(None),
         )
@@ -56,10 +54,26 @@ def counts():
     )
     per_list = {list_id: cnt for (list_id, cnt) in per_list_rows}
 
-    return jsonify({
+    return {
         "inbox": inbox,
         "today": today_count,
         "upcoming": upcoming,
         "completed": completed,
-        "lists": per_list,  # { list_id: active_task_count }
-    })
+        "lists": per_list,
+    }
+
+
+def build_lists_payload(user_id: int) -> list[dict]:
+    lists = (
+        TaskList.query
+        .filter(TaskList.user_id == user_id)
+        .order_by(TaskList.name.asc())
+        .all()
+    )
+    return [{"id": item.id, "name": item.name} for item in lists]
+
+@bp.get("/counts")
+@api_login_required
+def counts():
+    u = current_user()
+    return ok(build_sidebar_counts(u.id))

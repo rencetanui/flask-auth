@@ -16,7 +16,7 @@ class Config:
 
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "").lower() in {"1", "true", "yes", "on"}
 
     JSON_SORT_KEYS = False
     GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI")

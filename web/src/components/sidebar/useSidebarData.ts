@@ -19,13 +19,9 @@ export function useSidebarData() {
   async function refresh() {
     setLoading(true);
     try {
-      const [countsRes, listsRes] = await Promise.all([
-        api.get("/api/sidebar/counts"),
-        api.get("/api/lists"),
-      ]);
-
-      setCounts(countsRes ?? null);
-      setLists(listsRes?.items ?? []);
+      const res = await api.get("/api/bootstrap");
+      setCounts(res?.counts ?? null);
+      setLists(res?.lists ?? []);
     } finally {
       setLoading(false);
     }
