@@ -85,7 +85,7 @@ export default function Sidebar() {
               } catch (error) {
                 // Ignore logout failures and still return to login.
               }
-              window.location.href = "/login";
+              window.location.href = "/";
             }}
           >
             Logout

@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import SlideOver from "@/components/SlideOver";
+import LoginPage from "./LoginPage";
+import RegisterPage from "./RegisterPage";
 import { Link, useNavigate } from "react-router-dom";
 import "./landing.css";
+import { useLocation } from "react-router-dom";
 
 const featureCards = [
   {
@@ -146,6 +150,7 @@ function PricingButton({ plan, onPrimaryAction }) {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll(".tl-reveal"));
@@ -170,6 +175,18 @@ export default function Landing() {
     };
   }, []);
 
+  const panel = useMemo(() => {
+    if (location.pathname === "/login") return "login";
+    if (location.pathname === "/register") return "register";
+    return null;
+  }, [location.pathname]);
+
+  const isOpen = panel !== null;
+
+  function closePanel() {
+    navigate("/", { replace: true });
+  }
+
   function handleLoginAction() {
     navigate("/login");
   }
@@ -178,8 +195,18 @@ export default function Landing() {
     navigate("/register");
   }
 
+  const frosted =isOpen ? "tl-frosted": "";
+
   return (
     <div className="tl-page">
+      <SlideOver
+        open={isOpen}
+        onClose={closePanel}
+        title={panel === "register" ? "Create account" : "Sign in"}
+      >
+        {panel === "login" ? <LoginPage /> : panel === "register" ? <RegisterPage /> : null}
+      </SlideOver>
+
       <header className="tl-nav">
         <div className="tl-logo">Task Flow</div>
         <nav className="tl-nav-links" aria-label="Landing sections">

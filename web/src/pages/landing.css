@@ -1110,3 +1110,15 @@
     transform: none;
   }
 }
+
+.tl-frosted {
+  filter: blur((10px));
+  opacity: 0.85;
+  transform: cale(0.995);
+  transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
+  pointer-events: none; /* stops clicking landing while drawer open */
+}
+
+.tl-page .tl-frosted {
+  will-change: filter, opacity, transform;
+}

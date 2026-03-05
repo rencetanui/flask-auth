@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -14,6 +14,11 @@ export default function LoginPage() {
 
   const to = location.state?.from?.pathname || "/inbox"; // redirect target after login
 
+  function handleGoogle() {
+    // Absolute frontend URL (so backend can validate it safely)
+    const nextUrl = `${window.location.origin}${to}`;
+    window.location.href = `${API_BASE_URL}/api/auth/google/start?next=${encodeURIComponent(nextUrl)}`;
+  }
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -24,15 +29,12 @@ export default function LoginPage() {
         username: form.username.trim(),
         password: form.password,
       });
-      // Option A: backend returned user immediately
       if (res?.user) {
         setUser(res.user);
       } else {
-        // Option B: fetch /me to be safe
-        const me = await api.get("/api/auth/me");
-        setUser(me.user);
+        await refreshSession();
       }
-      navigate(from, { replace: true });
+      navigate(to, { replace: true });
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
@@ -41,46 +43,92 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="max-w-md w-full bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-semibold mb-4">Sign in</h1>
+    <div className="w-full">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-sm border">
 
+        <h1 className="text-2xl font-semibold text-center mb-6">
+          Sign in to your account
+        </h1>
+
+        {/* Google Login */}
+        <button
+          type="button"
+          onClick={handleGoogle}
+          className="w-full flex items-center justify-center gap-3 border py-2 rounded-md hover:bg-gray-50 transition"
+        >
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            className="w-5 h-5"
+          />
+          Continue with Google
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-grow border-t"></div>
+          <span className="mx-3 text-xs text-gray-500">OR</span>
+          <div className="flex-grow border-t"></div>
+        </div>
+
+        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+
           <div>
-            <label className="block text-sm font-medium">Username</label>
+            <label className="text-sm font-medium text-gray-700">
+              Username
+            </label>
             <input
               value={form.username}
-              onChange={(e) => setForm(s => ({ ...s, username: e.target.value }))}
+              onChange={(e) =>
+                setForm((s) => ({ ...s, username: e.target.value }))
+              }
               required
-              className="mt-1 w-full px-3 py-2 border rounded"
+              className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Password</label>
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
               value={form.password}
-              onChange={(e) => setForm(s => ({ ...s, password: e.target.value }))}
+              onChange={(e) =>
+                setForm((s) => ({ ...s, password: e.target.value }))
+              }
               required
-              className="mt-1 w-full px-3 py-2 border rounded"
+              className="mt-1 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && (
+            <div className="text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-70"
             disabled={submitting}
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-70"
           >
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? "Signing in..." : "Sign in"}
           </button>
+
         </form>
 
-        <div className="mt-4 text-sm">
-          Don't have an account? <Link to="/register" className="text-blue-600 underline">Create one</Link>
-        </div>
+        {/* Register link */}
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Don’t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-blue-600 hover:underline"
+          >
+            Create one
+          </Link>
+        </p>
+
       </div>
     </div>
   );
